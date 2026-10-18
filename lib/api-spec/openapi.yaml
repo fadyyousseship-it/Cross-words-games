@@ -3,13 +3,15 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: API for نور الكلمة, an Arabic scripture crossword game.
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: game
+    description: Player dashboard, stages, attempts, and leaderboard
 paths:
   /healthz:
     get:
@@ -24,6 +26,108 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /player/profile:
+    put:
+      operationId: savePlayerProfile
+      tags: [game]
+      summary: Save the signed-in player's public display name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlayerProfileInput"
+      responses:
+        "200":
+          description: Saved profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayerProfile"
+        "400":
+          description: Invalid display name
+  /game/dashboard:
+    get:
+      operationId: getGameDashboard
+      tags: [game]
+      summary: Get the player's score, stage map, and recent activity
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameDashboard"
+        "401":
+          description: Sign in required
+  /stages/{stageId}/puzzle:
+    get:
+      operationId: getStagePuzzle
+      tags: [game]
+      summary: Get a playable crossword without exposing its answers
+      parameters:
+        - name: stageId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Puzzle clue and grid data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StagePuzzle"
+        "403":
+          description: Stage is locked
+        "404":
+          description: Stage not found
+  /stages/{stageId}/attempt:
+    post:
+      operationId: submitStageAttempt
+      tags: [game]
+      summary: Check crossword answers and unlock the next stage
+      parameters:
+        - name: stageId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StageAttemptInput"
+      responses:
+        "200":
+          description: Answer results and score outcome
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StageAttemptResult"
+        "400":
+          description: Invalid attempt
+        "403":
+          description: Stage is locked
+        "404":
+          description: Stage not found
+  /leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [game]
+      summary: Get the individual player leaderboard
+      responses:
+        "200":
+          description: Ranked players
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +137,181 @@ components:
           type: string
       required:
         - status
+    PlayerProfileInput:
+      type: object
+      additionalProperties: false
+      properties:
+        displayName:
+          type: string
+          minLength: 2
+          maxLength: 24
+      required: [displayName]
+    PlayerProfile:
+      type: object
+      properties:
+        displayName:
+          type: string
+      required: [displayName]
+    StageSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        theme:
+          type: string
+        state:
+          type: string
+          enum: [locked, available, completed]
+        points:
+          type: integer
+      required: [id, title, theme, state, points]
+    RecentActivity:
+      type: object
+      properties:
+        id:
+          type: integer
+        stageId:
+          type: integer
+        title:
+          type: string
+        points:
+          type: integer
+        completedAt:
+          type: string
+          format: date-time
+      required: [id, stageId, title, points, completedAt]
+    GameDashboard:
+      type: object
+      properties:
+        profile:
+          anyOf:
+            - $ref: "#/components/schemas/PlayerProfile"
+            - type: "null"
+        score:
+          type: integer
+        completedStages:
+          type: integer
+        activeStageId:
+          type: ["integer", "null"]
+        stages:
+          type: array
+          items:
+            $ref: "#/components/schemas/StageSummary"
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecentActivity"
+      required: [profile, score, completedStages, activeStageId, stages, recentActivity]
+    PuzzleEntry:
+      type: object
+      properties:
+        questionId:
+          type: integer
+        number:
+          type: integer
+        clue:
+          type: string
+        direction:
+          type: string
+          enum: [across, down]
+        row:
+          type: integer
+        col:
+          type: integer
+        length:
+          type: integer
+        scriptureReference:
+          type: ["string", "null"]
+        keyCellIndex:
+          type: ["integer", "null"]
+        secretOrder:
+          type: ["integer", "null"]
+      required: [questionId, number, clue, direction, row, col, length, scriptureReference, keyCellIndex, secretOrder]
+    StagePuzzle:
+      type: object
+      properties:
+        stageId:
+          type: integer
+        title:
+          type: string
+        theme:
+          type: string
+        rows:
+          type: integer
+        columns:
+          type: integer
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/PuzzleEntry"
+        solvedQuestionIds:
+          type: array
+          items:
+            type: integer
+        solvedAnswers:
+          type: array
+          items:
+            $ref: "#/components/schemas/StageAnswer"
+      required: [stageId, title, theme, rows, columns, entries, solvedQuestionIds, solvedAnswers]
+    StageAnswer:
+      type: object
+      properties:
+        questionId:
+          type: integer
+        answer:
+          type: string
+      required: [questionId, answer]
+    StageAttemptInput:
+      type: object
+      additionalProperties: false
+      properties:
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/StageAnswer"
+        password:
+          type: string
+      required: [answers, password]
+    AnswerResult:
+      type: object
+      properties:
+        questionId:
+          type: integer
+        correct:
+          type: boolean
+      required: [questionId, correct]
+    StageAttemptResult:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerResult"
+        passwordCorrect:
+          type: boolean
+        stageComplete:
+          type: boolean
+        nextStageId:
+          type: ["integer", "null"]
+        scoreEarned:
+          type: integer
+        totalScore:
+          type: integer
+        message:
+          type: string
+      required: [results, passwordCorrect, stageComplete, nextStageId, scoreEarned, totalScore, message]
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        displayName:
+          type: string
+        score:
+          type: integer
+        completedStages:
+          type: integer
+      required: [rank, displayName, score, completedStages]
 

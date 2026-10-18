@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "نور الكلمة"
+description = "لعبة ويب عربية تعليمية للشباب، تستخدم الألغاز الكتابية والكلمات المتقاطعة مع مراحل متدرجة وتقدم محفوظ."
+version = "1.0.0"
+id = "artifacts/noor-al-kalima"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20936
+
+[services.development]
+run = "pnpm --filter @workspace/noor-al-kalima run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/noor-al-kalima", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/noor-al-kalima/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20936"
+BASE_PATH = "/"
