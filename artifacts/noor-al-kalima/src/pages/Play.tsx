@@ -70,7 +70,7 @@ function PlayGame() {
   }, [puzzle, answers]);
   const activeEntry = puzzle?.entries.find(entry => entry.questionId === selectedId) || puzzle?.entries[0];
   const solvedSet = new Set(puzzle?.solvedQuestionIds || []);
-  const secretLetters = [...(puzzle?.entries || [])]
+  const secretLetters = puzzle?.stageId === 10 ? [] : [...(puzzle?.entries || [])]
     .filter(entry => entry.keyCellIndex !== null && entry.secretOrder !== null)
     .sort((a, b) => (a.secretOrder ?? 0) - (b.secretOrder ?? 0))
     .map(entry => [...normalizeAnswerForGrid(answers[entry.questionId] || '')][entry.keyCellIndex ?? 0] || '');
@@ -145,11 +145,18 @@ function PlayGame() {
           </div>
           <div className="mt-4 rounded-2xl border border-accent/25 bg-[hsl(var(--accent)/.07)] p-4">
             <label htmlFor="secretWord" className="flex items-center gap-2 text-sm font-bold"><KeyRound size={17} className="text-accent"/> كلمة السر</label>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">اجمع الحروف داخل الخانات ذات الإطار الذهبي بالترتيب.</p>
-            <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground"><span>الحروف الظاهرة</span><div className="flex gap-1.5" dir="rtl">{secretLetters.map((letter, index) => <span key={index} className="grid size-7 place-items-center rounded-lg border border-accent/30 bg-card font-bold text-primary" data-testid={`secret-fragment-${index}`}>{letter || '·'}</span>)}</div></div>
-            <input id="secretWord" value={password} onChange={event=>{setPassword(event.target.value);setResult(null);}} className="mt-3 h-11 w-full rounded-xl border border-input bg-card px-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/15" placeholder="الكلمة التي تجمع الحروف" data-testid="input-secret-password"/>
+             <p className="mt-1 text-xs leading-5 text-muted-foreground">{puzzle?.stageId === 10 ? 'أدخل كلمة السر الختامية لإتمام الرحلة.' : 'اجمع الحروف داخل الخانات ذات الإطار الذهبي بالترتيب.'}</p>
+             {puzzle?.stageId !== 10&&<div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground"><span>الحروف الظاهرة</span><div className="flex gap-1.5" dir="rtl">{secretLetters.map((letter, index) => <span key={index} className="grid size-7 place-items-center rounded-lg border border-accent/30 bg-card font-bold text-primary" data-testid={`secret-fragment-${index}`}>{letter || '·'}</span>)}</div></div>}
+             <input id="secretWord" value={password} onChange={event=>{setPassword(event.target.value);setResult(null);}} className="mt-3 h-11 w-full rounded-xl border border-input bg-card px-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/15" placeholder={puzzle?.stageId === 10 ? 'اكتب كلمة السر الختامية' : 'الكلمة التي تجمع الحروف'} data-testid="input-secret-password"/>
           </div>
-          {result&&<div role="status" className={`mt-4 rounded-2xl border p-4 ${result.stageComplete?'border-primary/25 bg-primary/5':'border-accent/30 bg-accent/5'}`} data-testid="status-attempt-result"><p className="font-bold">{result.message}</p><p className="mt-1 text-sm text-muted-foreground">{result.passwordCorrect?'كلمة السر صحيحة':'تحقق من كلمة السر'} · {result.scoreEarned>0?`أضفت ${result.scoreEarned.toLocaleString('ar-EG')} نقطة`:'حاول مرة أخرى'}</p>{result.stageComplete&&result.nextStageId&&<Link href={`/play/${result.nextStageId}`} className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-primary" data-testid="link-next-stage">إلى المحطة التالية <ArrowRight size={16}/></Link>}{result.stageComplete&&!result.nextStageId&&<Link href="/" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-primary">العودة إلى الرحلة <ArrowRight size={16}/></Link>}</div>}
+          {result&&<div role="status" className={`mt-4 rounded-2xl border p-4 ${result.stageComplete?'border-primary/25 bg-primary/5':'border-accent/30 bg-accent/5'}`} data-testid="status-attempt-result">
+            {result.stageComplete&&!result.nextStageId
+              ? <div className="rounded-xl border border-accent/25 bg-card px-4 py-4 text-center"><Sparkles className="mx-auto text-accent" size={22}/><p className="mt-2 font-bold text-primary">{result.message}</p><p className="mt-2 text-sm text-muted-foreground">كلمة السر الختامية</p><p className="mt-1 font-serif text-2xl font-bold text-foreground" dir="rtl">لا تشاكلو</p></div>
+              : <p className="font-bold">{result.message}</p>}
+            <p className="mt-2 text-sm text-muted-foreground">{result.passwordCorrect?'كلمة السر صحيحة':'تحقق من كلمة السر'} · {result.scoreEarned>0?`أضفت ${result.scoreEarned.toLocaleString('ar-EG')} نقطة`:'حاول مرة أخرى'}</p>
+            {result.stageComplete&&result.nextStageId&&<Link href={`/play/${result.nextStageId}`} className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-primary" data-testid="link-next-stage">إلى المحطة التالية <ArrowRight size={16}/></Link>}
+            {result.stageComplete&&!result.nextStageId&&<Link href="/" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-primary">العودة إلى الرحلة <ArrowRight size={16}/></Link>}
+          </div>}
           {attempt.isError&&<p role="alert" className="mt-3 text-sm text-destructive">لم نتمكن من إرسال إجاباتك. تحقق من اتصالك وأعد المحاولة.</p>}
           <button type="submit" disabled={attempt.isPending} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3.5 font-bold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60" data-testid="button-submit-attempt">{attempt.isPending?<><LoaderCircle size={17} className="animate-spin"/> جارٍ التحقق...</>:<><Send size={16}/> إرسال الإجابات</>}</button>
           <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground"><Sparkles size={14}/> يمكنك المحاولة أكثر من مرة.</div>

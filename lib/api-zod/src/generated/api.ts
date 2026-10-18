@@ -130,13 +130,20 @@ export const SubmitStageAttemptResponse = zod.object({
 
 
 /**
- * @summary Get the individual player leaderboard
+ * @summary Check whether the signed-in player is the configured administrator
+ */
+export const GetAdminAccessResponse = zod.object({
+  "isAdmin": zod.boolean()
+})
+
+
+/**
+ * @summary Get the first three players to complete every stage
  */
 export const GetLeaderboardResponseItem = zod.object({
   "rank": zod.number().int(),
   "displayName": zod.string(),
-  "score": zod.number().int(),
-  "completedStages": zod.number().int()
+  "completedAt": zod.coerce.date()
 })
 export const GetLeaderboardResponse = zod.array(GetLeaderboardResponseItem)
 

@@ -117,10 +117,13 @@ export interface StageAttemptResult {
   message: string;
 }
 
+export interface AdminAccess {
+  isAdmin: boolean;
+}
+
 export interface LeaderboardEntry {
   rank: number;
   displayName: string;
-  score: number;
-  completedStages: number;
+  completedAt: string;
 }
 

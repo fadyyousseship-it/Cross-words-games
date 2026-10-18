@@ -114,20 +114,38 @@ paths:
           description: Stage is locked
         "404":
           description: Stage not found
+  /admin/access:
+    get:
+      operationId: getAdminAccess
+      tags: [game]
+      summary: Check whether the signed-in player is the configured administrator
+      responses:
+        "200":
+          description: Administrator access status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAccess"
+        "401":
+          description: Authentication required
   /leaderboard:
     get:
       operationId: getLeaderboard
       tags: [game]
-      summary: Get the individual player leaderboard
+      summary: Get the first three players to complete every stage
       responses:
         "200":
-          description: Ranked players
+          description: First three finishers, ordered by final completion time
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/LeaderboardEntry"
+        "401":
+          description: Authentication required
+        "403":
+          description: Administrator access required
 components:
   schemas:
     HealthStatus:
@@ -302,6 +320,12 @@ components:
         message:
           type: string
       required: [results, passwordCorrect, stageComplete, nextStageId, scoreEarned, totalScore, message]
+    AdminAccess:
+      type: object
+      properties:
+        isAdmin:
+          type: boolean
+      required: [isAdmin]
     LeaderboardEntry:
       type: object
       properties:
@@ -309,9 +333,8 @@ components:
           type: integer
         displayName:
           type: string
-        score:
-          type: integer
-        completedStages:
-          type: integer
-      required: [rank, displayName, score, completedStages]
+        completedAt:
+          type: string
+          format: date-time
+      required: [rank, displayName, completedAt]
 

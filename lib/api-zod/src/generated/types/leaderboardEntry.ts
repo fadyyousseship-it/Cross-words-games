@@ -9,6 +9,5 @@
 export interface LeaderboardEntry {
   rank: number;
   displayName: string;
-  score: number;
-  completedStages: number;
+  completedAt: Date;
 }

@@ -1,10 +1,15 @@
 import { Link } from 'wouter';
 import { BookOpen, ChevronLeft, Crown, LogOut } from 'lucide-react';
-import { useClerk, useUser } from '@clerk/react';
+import { useAuth, useClerk, useUser } from '@clerk/react';
+import { getGetAdminAccessQueryKey, useGetAdminAccess } from '@workspace/api-client-react';
 
 export function GameShell({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
   const { signOut } = useClerk();
+  const { isSignedIn } = useAuth();
+  const { data: adminAccess } = useGetAdminAccess({
+    query: { queryKey: getGetAdminAccessQueryKey(), enabled: isSignedIn === true, staleTime: 60_000, retry: false },
+  });
   return (
     <div className="min-h-[100dvh]">
       <header className="sticky top-0 z-20 border-b border-[hsl(var(--border)/.75)] bg-[hsl(var(--background)/.92)] backdrop-blur-xl">
@@ -15,7 +20,7 @@ export function GameShell({ children }: { children: React.ReactNode }) {
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2" aria-label="التنقل الرئيسي">
             <Link href="/" className="rounded-full px-3 py-2 text-sm font-semibold text-foreground hover:bg-secondary" data-testid="link-dashboard">رحلتي</Link>
-            <Link href="/leaderboard" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-foreground hover:bg-secondary" data-testid="link-leaderboard"><Crown size={16}/> <span className="hidden sm:inline">لوحة المتصدرين</span><span className="sm:hidden">الترتيب</span></Link>
+            {adminAccess?.isAdmin && <Link href="/leaderboard" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-foreground hover:bg-secondary" data-testid="link-leaderboard"><Crown size={16}/> <span className="hidden sm:inline">لوحة المتصدرين</span><span className="sm:hidden">الترتيب</span></Link>}
           </nav>
           <div className="flex items-center gap-2">
             <span className="hidden max-w-28 truncate text-sm text-muted-foreground sm:block">{user?.firstName || 'لاعب'}</span>

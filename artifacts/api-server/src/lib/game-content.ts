@@ -13,6 +13,7 @@ export type GameStage = {
   id: number;
   title: string;
   theme: string;
+  secret?: string;
   entries: CrosswordEntry[];
 };
 
@@ -126,6 +127,7 @@ export const gameStages: GameStage[] = [
     id: 10,
     title: "ذكرى باقية",
     theme: "العشاء الأخير",
+    secret: "لا تشاكلو",
     entries: [
       { questionId: 16, clue: "قال يسوع لتلاميذه في العشاء الأخير: اصنعوا هذا لـ...", answer: "ذكرى", direction: "across", row: 0, col: 0, keyCellIndex: 3, secretOrder: 1 },
     ],
@@ -143,6 +145,7 @@ export function normalizeArabicAnswer(value: string): string {
 }
 
 export function stageSecret(stage: GameStage): string {
+  if (stage.secret) return stage.secret;
   return [...stage.entries]
     .sort((a, b) => a.secretOrder - b.secretOrder)
     .map((entry) => [...normalizeArabicAnswer(entry.answer)][entry.keyCellIndex] ?? "")

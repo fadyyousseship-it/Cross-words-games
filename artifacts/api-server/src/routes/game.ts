@@ -1,8 +1,9 @@
-import { and, desc, eq } from "drizzle-orm";
-import { getAuth } from "@clerk/express";
+import { and, asc, eq, isNotNull } from "drizzle-orm";
+import { clerkClient, getAuth } from "@clerk/express";
 import { Router, type IRouter, type Request, type Response } from "express";
 import {
   GetGameDashboardResponse,
+  GetAdminAccessResponse,
   GetLeaderboardResponse,
   GetStagePuzzleParams,
   GetStagePuzzleResponse,
@@ -29,6 +30,18 @@ function authenticatedUserId(req: Request, res: Response): string | undefined {
     return undefined;
   }
   return userId;
+}
+
+async function isConfiguredAdmin(userId: string): Promise<boolean> {
+  const configuredEmail = process.env.GAME_ADMIN_EMAIL?.trim().toLowerCase();
+  if (!configuredEmail) return false;
+
+  const user = await clerkClient.users.getUser(userId);
+  const primaryEmail = user.primaryEmailAddress;
+  return (
+    primaryEmail?.verification?.status === "verified" &&
+    primaryEmail.emailAddress.trim().toLowerCase() === configuredEmail
+  );
 }
 
 async function canAccessStage(userId: string, stageId: number): Promise<boolean> {
@@ -129,6 +142,17 @@ router.get("/game/dashboard", async (req, res): Promise<void> => {
       activeStageId: activeStage?.id ?? null,
       stages,
       recentActivity,
+    }),
+  );
+});
+
+router.get("/admin/access", async (req, res): Promise<void> => {
+  const userId = authenticatedUserId(req, res);
+  if (!userId) return;
+
+  res.json(
+    GetAdminAccessResponse.parse({
+      isAdmin: await isConfiguredAdmin(userId),
     }),
   );
 });
@@ -336,7 +360,9 @@ router.post("/stages/:stageId/attempt", async (req, res): Promise<void> => {
       nextStageId: completed && stage.id < gameStages.length ? stage.id + 1 : null,
       scoreEarned,
       message: completedNow
-        ? "أحسنت! أُكملت المرحلة وفُتحت المرحلة التالية."
+        ? stage.id === gameStages.length
+          ? "تهانينا! أتممت المراحل العشر."
+          : "أحسنت! أُكملت المرحلة وفُتحت المرحلة التالية."
         : completed
           ? "هذه المرحلة مكتملة بالفعل."
           : allSolved
@@ -358,41 +384,42 @@ router.post("/stages/:stageId/attempt", async (req, res): Promise<void> => {
   );
 });
 
-router.get("/leaderboard", async (_req, res): Promise<void> => {
-  const profiles = await db
+router.get("/leaderboard", async (req, res): Promise<void> => {
+  const userId = authenticatedUserId(req, res);
+  if (!userId) return;
+  if (!(await isConfiguredAdmin(userId))) {
+    res.status(403).json({ error: "Administrator access required." });
+    return;
+  }
+
+  const finalStageId = gameStages[gameStages.length - 1].id;
+  const finishers = await db
     .select({
-      clerkUserId: gameProfilesTable.clerkUserId,
       displayName: gameProfilesTable.displayName,
+      completedAt: stageProgressTable.completedAt,
     })
-    .from(gameProfilesTable);
-  const progress = await db.select().from(stageProgressTable);
-  const totals = new Map<string, { score: number; completedStages: number }>();
-  for (const profile of profiles) {
-    totals.set(profile.clerkUserId, { score: 0, completedStages: 0 });
-  }
-  for (const item of progress) {
-    const total = totals.get(item.clerkUserId);
-    if (!total) continue;
-    total.score += item.score;
-    if (item.completed) total.completedStages += 1;
-  }
-
-  const ranked = profiles
-    .map((profile) => ({
-      displayName: profile.displayName,
-      score: totals.get(profile.clerkUserId)?.score ?? 0,
-      completedStages:
-        totals.get(profile.clerkUserId)?.completedStages ?? 0,
-    }))
-    .sort(
-      (a, b) =>
-        b.score - a.score ||
-        b.completedStages - a.completedStages ||
-        a.displayName.localeCompare(b.displayName, "ar"),
+    .from(stageProgressTable)
+    .innerJoin(
+      gameProfilesTable,
+      eq(gameProfilesTable.clerkUserId, stageProgressTable.clerkUserId),
     )
-    .slice(0, 50)
-    .map((player, index) => ({ rank: index + 1, ...player }));
-
+    .where(
+      and(
+        eq(stageProgressTable.stageId, finalStageId),
+        eq(stageProgressTable.completed, true),
+        isNotNull(stageProgressTable.completedAt),
+      ),
+    )
+    .orderBy(
+      asc(stageProgressTable.completedAt),
+      asc(stageProgressTable.id),
+    )
+    .limit(3);
+  const ranked = finishers.map((player, index) => ({
+    rank: index + 1,
+    displayName: player.displayName,
+    completedAt: player.completedAt!.toISOString(),
+  }));
   res.json(GetLeaderboardResponse.parse(ranked));
 });
 
