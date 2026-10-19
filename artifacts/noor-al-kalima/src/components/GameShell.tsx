@@ -16,7 +16,7 @@ export function GameShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between px-4 sm:px-8">
           <Link href="/" className="flex items-center gap-3" data-testid="link-home">
             <span className="grid size-11 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-sm"><BookOpen size={21}/></span>
-            <span><b className="block font-serif text-[22px] leading-none">نور الكلمة</b><small className="mt-1 block text-[10px] tracking-[.14em] text-muted-foreground">رحلة في الكتاب المقدس</small></span>
+            <span><b className="block font-serif text-[22px] leading-none">Akinetos</b><small className="mt-1 block text-[10px] tracking-wide text-muted-foreground">our path -choose what lasts</small></span>
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2" aria-label="التنقل الرئيسي">
             <Link href="/" className="rounded-full px-3 py-2 text-sm font-semibold text-foreground hover:bg-secondary" data-testid="link-dashboard">رحلتي</Link>

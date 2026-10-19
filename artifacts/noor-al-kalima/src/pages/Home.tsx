@@ -11,7 +11,7 @@ function PublicLanding() {
   const { openSignIn, openSignUp } = useClerk();
   return <div className="grain min-h-[100dvh] overflow-hidden">
     <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
-      <div className="flex items-center gap-3"><span className="grid size-11 place-items-center rounded-2xl bg-primary text-primary-foreground"><BookOpen size={20}/></span><span className="font-serif text-2xl">نور الكلمة</span></div>
+      <div className="flex items-center gap-3"><span className="grid size-11 place-items-center rounded-2xl bg-primary text-primary-foreground"><BookOpen size={20}/></span><span><b className="block font-serif text-2xl">Akinetos</b><small className="block text-[10px] tracking-wide text-muted-foreground">our path -choose what lasts</small></span></div>
       <div className="flex items-center gap-2"><button onClick={() => openSignIn()} className="rounded-full px-4 py-2.5 text-sm font-semibold hover:bg-secondary" data-testid="button-open-sign-in">دخول</button><button onClick={() => openSignUp()} className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:-translate-y-0.5" data-testid="button-open-sign-up">ابدأ اللعب</button></div>
     </header>
     <main>
@@ -47,7 +47,7 @@ function PublicLanding() {
         <div className="max-w-xl"><p className="text-sm font-bold text-primary">مرحلة واحدة تضم جميع الأسئلة</p><h2 className="mt-3 font-serif text-3xl sm:text-4xl">من حكايات البداية إلى كلمات الرجاء.</h2><p className="mt-4 leading-7 text-muted-foreground">أكمل الأسئلة الستة عشر على مهل، وسيُحفظ تقدمك لتعود وتكمل من حيث توقفت.</p></div>
         <div className="flex items-center gap-3 rounded-[1.5rem] border border-border bg-card px-6 py-5"><Sparkles size={20} className="text-accent"/><span className="text-sm leading-6">١٦ سؤالاً<br/><b>وتهنئة عند الإكمال</b></span></div>
       </section>
-      <footer className="border-t border-border px-5 py-6 text-center text-xs text-muted-foreground">نور الكلمة — لنجعل التعلّم رحلة مشتركة.</footer>
+      <footer className="border-t border-border px-5 py-6 text-center text-xs text-muted-foreground">Akinetos — our path -choose what lasts</footer>
     </main>
   </div>;
 }
