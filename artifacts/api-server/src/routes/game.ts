@@ -19,7 +19,7 @@ import {
   gameProfilesTable,
   stageProgressTable,
 } from "@workspace/db";
-import { gameStages, getStage, normalizeArabicAnswer, stageSecret } from "../lib/game-content";
+import { gameStages, getStage, normalizeArabicAnswer } from "../lib/game-content";
 
 const router: IRouter = Router();
 
@@ -33,14 +33,17 @@ function authenticatedUserId(req: Request, res: Response): string | undefined {
 }
 
 async function isConfiguredAdmin(userId: string): Promise<boolean> {
-  const configuredEmail = process.env.GAME_ADMIN_EMAIL?.trim().toLowerCase();
-  if (!configuredEmail) return false;
+  const configuredEmails = (process.env.GAME_ADMIN_EMAIL ?? "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+  if (configuredEmails.length === 0) return false;
 
   const user = await clerkClient.users.getUser(userId);
   const primaryEmail = user.primaryEmailAddress;
   return (
     primaryEmail?.verification?.status === "verified" &&
-    primaryEmail.emailAddress.trim().toLowerCase() === configuredEmail
+    configuredEmails.includes(primaryEmail.emailAddress.trim().toLowerCase())
   );
 }
 
@@ -95,22 +98,45 @@ router.get("/game/dashboard", async (req, res): Promise<void> => {
     .select()
     .from(stageProgressTable)
     .where(eq(stageProgressTable.clerkUserId, userId));
-  const progressByStage = new Map(progress.map((item) => [item.stageId, item]));
-  const completedCount = progress.filter((item) => item.completed).length;
-  const totalScore = progress.reduce((total, item) => total + item.score, 0);
+  const currentStageIds = new Set(gameStages.map((stage) => stage.id));
+  const currentProgress = progress.filter((item) =>
+    currentStageIds.has(item.stageId),
+  );
+  const progressByStage = new Map(
+    currentProgress.map((item) => [item.stageId, item]),
+  );
+  const isStageComplete = (stage: (typeof gameStages)[number]) => {
+    const stageProgress = progressByStage.get(stage.id);
+    return (
+      stageProgress?.completed === true &&
+      stage.entries.every((entry) =>
+        (stageProgress.solvedQuestionIds ?? []).includes(entry.questionId),
+      )
+    );
+  };
+  const completedCount = gameStages.filter(isStageComplete).length;
+  const totalScore = currentProgress.reduce(
+    (total, item) => total + item.score,
+    0,
+  );
   const activeStage = gameStages.find(
-    (stage) => !progressByStage.get(stage.id)?.completed,
+    (stage) => !isStageComplete(stage),
   );
 
   const stages = gameStages.map((stage) => {
     const stageProgress = progressByStage.get(stage.id);
     const previousComplete =
-      stage.id === 1 || progressByStage.get(stage.id - 1)?.completed === true;
+      stage.id === gameStages[0]?.id ||
+      (stage.id > 1 &&
+        gameStages.some(
+          (previousStage) =>
+            previousStage.id === stage.id - 1 && isStageComplete(previousStage),
+        ));
     return {
       id: stage.id,
       title: stage.title,
       theme: stage.theme,
-      state: stageProgress?.completed
+      state: isStageComplete(stage)
         ? "completed"
         : previousComplete
           ? "available"
@@ -120,7 +146,13 @@ router.get("/game/dashboard", async (req, res): Promise<void> => {
   });
 
   const recentActivity = progress
-    .filter((item) => item.completed && item.completedAt)
+    .filter(
+      (item) =>
+        item.completed &&
+        item.completedAt &&
+        currentStageIds.has(item.stageId) &&
+        isStageComplete(gameStages.find((stage) => stage.id === item.stageId)!),
+    )
     .sort(
       (a, b) =>
         (b.completedAt?.getTime() ?? 0) - (a.completedAt?.getTime() ?? 0),
@@ -303,13 +335,8 @@ router.post("/stages/:stageId/attempt", async (req, res): Promise<void> => {
     const allSolved = stage.entries.every((entry) =>
       solvedIds.has(entry.questionId),
     );
-    const alreadyCompleted = existing?.completed === true;
-    const passwordCorrect =
-      alreadyCompleted ||
-      (allSolved &&
-        normalizeArabicAnswer(body.data.password) ===
-          normalizeArabicAnswer(stageSecret(stage)));
-    const completed = alreadyCompleted || (allSolved && passwordCorrect);
+    const alreadyCompleted = existing?.completed === true && allSolved;
+    const completed = alreadyCompleted || allSolved;
     const completedNow = completed && !alreadyCompleted;
     const scoreEarned =
       newlySolved.length * 10 + (completedNow ? 50 + 20 : 0);
@@ -355,27 +382,33 @@ router.post("/stages/:stageId/attempt", async (req, res): Promise<void> => {
 
     return {
       results,
-      passwordCorrect,
       stageComplete: completed,
-      nextStageId: completed && stage.id < gameStages.length ? stage.id + 1 : null,
+      nextStageId: completed
+        ? gameStages[gameStages.findIndex((item) => item.id === stage.id) + 1]
+            ?.id ?? null
+        : null,
       scoreEarned,
       message: completedNow
         ? stage.id === gameStages.length
-          ? "تهانينا! أتممت المراحل العشر."
+          ? "تهانينا! أتممت جميع الأسئلة. لا تشاكلو"
           : "أحسنت! أُكملت المرحلة وفُتحت المرحلة التالية."
         : completed
           ? "هذه المرحلة مكتملة بالفعل."
-          : allSolved
-            ? "الإجابات صحيحة؛ راجع حروف كلمة السر."
-            : "تم فحص الإجابات. أكمل الحل وحاول مرة أخرى.",
+          : "تم فحص الإجابات. أكمل الحل وحاول مرة أخرى.",
     };
   });
 
   const progress = await db
-    .select({ score: stageProgressTable.score })
+    .select({
+      stageId: stageProgressTable.stageId,
+      score: stageProgressTable.score,
+    })
     .from(stageProgressTable)
     .where(eq(stageProgressTable.clerkUserId, userId));
-  const totalScore = progress.reduce((sum, item) => sum + item.score, 0);
+  const currentStageIds = new Set(gameStages.map((stage) => stage.id));
+  const totalScore = progress
+    .filter((item) => currentStageIds.has(item.stageId))
+    .reduce((sum, item) => sum + item.score, 0);
   res.json(
     SubmitStageAttemptResponse.parse({
       ...result,
@@ -397,6 +430,7 @@ router.get("/leaderboard", async (req, res): Promise<void> => {
     .select({
       displayName: gameProfilesTable.displayName,
       completedAt: stageProgressTable.completedAt,
+      solvedQuestionIds: stageProgressTable.solvedQuestionIds,
     })
     .from(stageProgressTable)
     .innerJoin(
@@ -414,12 +448,21 @@ router.get("/leaderboard", async (req, res): Promise<void> => {
       asc(stageProgressTable.completedAt),
       asc(stageProgressTable.id),
     )
-    .limit(3);
-  const ranked = finishers.map((player, index) => ({
+  const completedQuestionIds = new Set(
+    gameStages[gameStages.length - 1].entries.map((entry) => entry.questionId),
+  );
+  const ranked = finishers
+    .filter((player) =>
+      [...completedQuestionIds].every((questionId) =>
+        player.solvedQuestionIds.includes(questionId),
+      ),
+    )
+    .slice(0, 3)
+    .map((player, index) => ({
     rank: index + 1,
     displayName: player.displayName,
     completedAt: player.completedAt!.toISOString(),
-  }));
+    }));
   res.json(GetLeaderboardResponse.parse(ranked));
 });
 

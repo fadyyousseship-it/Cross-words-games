@@ -289,9 +289,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/StageAnswer"
-        password:
-          type: string
-      required: [answers, password]
+      required: [answers]
     AnswerResult:
       type: object
       properties:
@@ -307,8 +305,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AnswerResult"
-        passwordCorrect:
-          type: boolean
         stageComplete:
           type: boolean
         nextStageId:
@@ -319,7 +315,7 @@ components:
           type: integer
         message:
           type: string
-      required: [results, passwordCorrect, stageComplete, nextStageId, scoreEarned, totalScore, message]
+      required: [results, stageComplete, nextStageId, scoreEarned, totalScore, message]
     AdminAccess:
       type: object
       properties:

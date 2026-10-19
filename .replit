@@ -25,4 +25,4 @@ channel = "stable-25_05"
 [userenv]
 
 [userenv.shared]
-GAME_ADMIN_EMAIL = "kokogeme552@gmail.com"
+GAME_ADMIN_EMAIL = "kokogeme552@gmail.com,marveymourad415@gmail.com"

@@ -9,7 +9,6 @@ import type { AnswerResult } from './answerResult';
 
 export interface StageAttemptResult {
   results: AnswerResult[];
-  passwordCorrect: boolean;
   stageComplete: boolean;
   /** @nullable */
   nextStageId: number | null;

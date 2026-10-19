@@ -56,7 +56,7 @@ function LeaderboardContent() {
           <div>
             <p className="flex items-center gap-2 text-sm text-white/70"><Sparkles size={15}/> لوحة إدارية</p>
             <h1 className="mt-2 font-serif text-4xl sm:text-5xl">أوائل من أكملوا الرحلة</h1>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-white/75">يظهر هنا أول ثلاثة أنهوا المراحل العشر، مرتّبين حسب وقت إكمال المرحلة الأخيرة.</p>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-white/75">يظهر هنا أول ثلاثة أنهوا أسئلة المرحلة، مرتّبين حسب وقت الإكمال.</p>
           </div>
           <div className="rounded-2xl border border-white/15 bg-white/10 px-5 py-3 text-sm">
             <b className="text-2xl">{finishers.length.toLocaleString('ar-EG')}</b>
@@ -68,7 +68,7 @@ function LeaderboardContent() {
       {finishers.length === 0
         ? <section className="mt-7 rounded-[2rem] border border-dashed border-border bg-card/70 px-6 py-16 text-center">
             <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-secondary text-primary"><Trophy size={24}/></span>
-            <h2 className="mt-4 font-serif text-2xl">لم يُكمل أحد المراحل العشر بعد</h2>
+            <h2 className="mt-4 font-serif text-2xl">لم يُكمل أحد أسئلة المرحلة بعد</h2>
             <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">ستظهر هنا أسماء أول ثلاثة متسابقين بعد إتمام المرحلة الأخيرة.</p>
           </section>
         : <>
@@ -93,7 +93,7 @@ function LeaderboardContent() {
                     <div className={`mt-3 flex w-full flex-col items-center justify-center rounded-t-2xl ${height} ${isTop ? 'bg-[#e7c57e] text-[#51401e]' : 'bg-secondary text-primary'}`}>
                       <span className="mb-2">{marker}</span>
                       <b className="font-serif text-3xl">{player.rank.toLocaleString('ar-EG')}</b>
-                      <small className="mt-1 text-[11px]">أكمل المراحل العشر</small>
+                      <small className="mt-1 text-[11px]">أكمل الأسئلة الستة عشر</small>
                     </div>
                   </div>;
                 })}
@@ -107,7 +107,7 @@ function LeaderboardContent() {
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[500px] text-right">
-                  <thead><tr className="bg-secondary/45 text-xs text-muted-foreground"><th className="px-5 py-3 font-semibold sm:px-7">المركز</th><th className="px-4 py-3 font-semibold">المتسابق</th><th className="px-5 py-3 font-semibold sm:px-7">وقت إكمال المراحل العشر</th></tr></thead>
+                  <thead><tr className="bg-secondary/45 text-xs text-muted-foreground"><th className="px-5 py-3 font-semibold sm:px-7">المركز</th><th className="px-4 py-3 font-semibold">المتسابق</th><th className="px-5 py-3 font-semibold sm:px-7">وقت إكمال المرحلة</th></tr></thead>
                   <tbody>{finishers.map(player => <tr key={player.rank} className="border-t border-border/75 transition hover:bg-secondary/25" data-testid={`row-leaderboard-${player.rank}`}>
                     <td className="px-5 py-4 sm:px-7"><span className={`grid size-9 place-items-center rounded-xl text-sm font-bold ${player.rank === 1 ? 'bg-[#e7c57e] text-[#51401e]' : 'bg-secondary text-primary'}`}>{player.rank.toLocaleString('ar-EG')}</span></td>
                     <td className="px-4 py-4"><span className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-primary/10 text-sm font-bold text-primary">{player.displayName.trim().slice(0, 1)}</span><b className="text-sm">{player.displayName}</b></span></td>

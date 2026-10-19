@@ -111,8 +111,7 @@ export const SubmitStageAttemptBody = zod.object({
   "answers": zod.array(zod.object({
   "questionId": zod.number().int(),
   "answer": zod.string()
-})),
-  "password": zod.string()
+}))
 })
 
 export const SubmitStageAttemptResponse = zod.object({
@@ -120,7 +119,6 @@ export const SubmitStageAttemptResponse = zod.object({
   "questionId": zod.number().int(),
   "correct": zod.boolean()
 })),
-  "passwordCorrect": zod.boolean(),
   "stageComplete": zod.boolean(),
   "nextStageId": zod.number().int().nullable(),
   "scoreEarned": zod.number().int(),

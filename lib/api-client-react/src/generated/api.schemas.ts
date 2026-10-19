@@ -98,7 +98,6 @@ export interface StagePuzzle {
 
 export interface StageAttemptInput {
   answers: StageAnswer[];
-  password: string;
 }
 
 export interface AnswerResult {
@@ -108,7 +107,6 @@ export interface AnswerResult {
 
 export interface StageAttemptResult {
   results: AnswerResult[];
-  passwordCorrect: boolean;
   stageComplete: boolean;
   /** @nullable */
   nextStageId: number | null;

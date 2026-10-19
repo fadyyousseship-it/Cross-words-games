@@ -9,5 +9,4 @@ import type { StageAnswer } from './stageAnswer';
 
 export interface StageAttemptInput {
   answers: StageAnswer[];
-  password: string;
 }

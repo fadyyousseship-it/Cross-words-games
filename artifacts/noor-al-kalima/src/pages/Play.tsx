@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useParams } from 'wouter';
 import { Show } from '@clerk/react';
-import { ArrowRight, BookOpen, Check, ChevronDown, CircleHelp, KeyRound, LoaderCircle, Send, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, Check, ChevronDown, CircleHelp, LoaderCircle, Send, Sparkles } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getGetGameDashboardQueryKey, getGetLeaderboardQueryKey, getGetStagePuzzleQueryKey, useGetStagePuzzle, useSubmitStageAttempt } from '@workspace/api-client-react';
 import type { PuzzleEntry, StageAttemptResult } from '@workspace/api-client-react';
 import { GameShell } from '@/components/GameShell';
 import { ErrorState, LoadingState, SignInPrompt } from '@/components/States';
 
-type CrosswordCell = { number?: number; questionIds: number[]; letters: string[]; isKeyCell: boolean; secretOrder?: number };
+type CrosswordCell = { number?: number; questionIds: number[]; letters: string[] };
 
 function normalizeAnswerForGrid(value: string): string {
   return value
@@ -27,7 +27,6 @@ function PlayGame() {
   const validStageId = Number.isInteger(stageId) && stageId > 0;
   const { data: puzzle, isLoading, isError, refetch } = useGetStagePuzzle(validStageId ? stageId : 0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [password, setPassword] = useState('');
   const [result, setResult] = useState<StageAttemptResult | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const queryClient = useQueryClient();
@@ -54,15 +53,11 @@ function PlayGame() {
         const row = entry.row + (entry.direction === 'down' ? offset : 0);
         const col = entry.col + (entry.direction === 'across' ? offset : 0);
         const key = `${row}:${col}`;
-        const cell = map.get(key) || { questionIds: [], letters: [], isKeyCell: false };
+        const cell = map.get(key) || { questionIds: [], letters: [] };
         if (offset === 0) cell.number = entry.number;
         if (!cell.questionIds.includes(entry.questionId)) cell.questionIds.push(entry.questionId);
         const letter = [...normalizeAnswerForGrid(answers[entry.questionId] || '')][offset] || '';
         if (letter) cell.letters.push(letter);
-        if (entry.keyCellIndex === offset) {
-          cell.isKeyCell = true;
-          cell.secretOrder = entry.secretOrder ?? undefined;
-        }
         map.set(key, cell);
       }
     });
@@ -70,10 +65,6 @@ function PlayGame() {
   }, [puzzle, answers]);
   const activeEntry = puzzle?.entries.find(entry => entry.questionId === selectedId) || puzzle?.entries[0];
   const solvedSet = new Set(puzzle?.solvedQuestionIds || []);
-  const secretLetters = puzzle?.stageId === 10 ? [] : [...(puzzle?.entries || [])]
-    .filter(entry => entry.keyCellIndex !== null && entry.secretOrder !== null)
-    .sort((a, b) => (a.secretOrder ?? 0) - (b.secretOrder ?? 0))
-    .map(entry => [...normalizeAnswerForGrid(answers[entry.questionId] || '')][entry.keyCellIndex ?? 0] || '');
   const completedCount = puzzle?.entries.filter(entry => solvedSet.has(entry.questionId) || result?.results.some(row => row.questionId === entry.questionId && row.correct)).length || 0;
 
   if (!validStageId) return <GameShell><ErrorState retry={() => setLocation('/')}/></GameShell>;
@@ -83,7 +74,7 @@ function PlayGame() {
   const submitAttempt = (event: React.FormEvent) => {
     event.preventDefault();
     setResult(null);
-    attempt.mutate({ stageId, data: { answers: puzzle.entries.filter(entry => (answers[entry.questionId] || '').trim()).map(entry => ({ questionId: entry.questionId, answer: answers[entry.questionId].trim() })), password: password.trim() } }, {
+    attempt.mutate({ stageId, data: { answers: puzzle.entries.filter(entry => (answers[entry.questionId] || '').trim()).map(entry => ({ questionId: entry.questionId, answer: answers[entry.questionId].trim() })) } }, {
       onSuccess: async response => {
         setResult(response);
         await Promise.all([
@@ -99,11 +90,11 @@ function PlayGame() {
   return <GameShell><div className="page-enter">
     <div className="mb-6 flex items-center justify-between gap-3">
       <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground" data-testid="link-back-dashboard"><ArrowRight size={17}/> العودة إلى الرحلة</Link>
-      <span className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-primary">المحطة {stageId.toLocaleString('ar-EG')} من ١٠</span>
+      <span className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-primary">المحطة ١ من ١</span>
     </div>
     <section className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm">
       <div className="flex flex-col justify-between gap-4 border-b border-border bg-secondary/45 px-5 py-5 sm:flex-row sm:items-center sm:px-8">
-        <div><p className="text-xs font-bold text-accent">موضوع المحطة · {puzzle.theme}</p><h1 className="mt-1 font-serif text-3xl sm:text-4xl">{puzzle.title}</h1><p className="mt-2 text-sm text-muted-foreground">أجب عن الأسئلة، ثم اكتب كلمة السر التي تجمعها من الشبكة.</p></div>
+         <div><p className="text-xs font-bold text-accent">موضوع المحطة · {puzzle.theme}</p><h1 className="mt-1 font-serif text-3xl sm:text-4xl">{puzzle.title}</h1><p className="mt-2 text-sm text-muted-foreground">أجب عن جميع الأسئلة لإتمام الرحلة.</p></div>
         <div className="flex items-center gap-3 rounded-2xl bg-card px-4 py-3"><span className="grid size-9 place-items-center rounded-xl bg-primary/10 text-primary"><BookOpen size={18}/></span><span className="text-sm"><b>{completedCount.toLocaleString('ar-EG')}</b><span className="text-muted-foreground"> / {puzzle.entries.length.toLocaleString('ar-EG')} إجابات</span></span></div>
       </div>
       <form onSubmit={submitAttempt} className="grid gap-6 p-4 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(300px,.78fr)] lg:gap-8">
@@ -117,7 +108,7 @@ function PlayGame() {
                 if (!cell) return <div key={index} className="aspect-square w-[min(8.6vw,43px)] min-w-[26px]"/>;
                 const selected = activeEntry && cell.questionIds.includes(activeEntry.questionId);
                 const letter = cell.letters[0] || '';
-                return <button key={index} type="button" onClick={() => cell.questionIds[0] && setSelectedId(cell.questionIds[0])} className={`relative aspect-square w-[min(8.6vw,43px)] min-w-[26px] rounded-[5px] border text-base font-bold transition sm:rounded-lg sm:text-lg ${selected?'border-[#f2c989] bg-[#fae7c4] text-primary':'border-[#e9dfc9] bg-[#f7f0df] text-foreground'} ${cell.isKeyCell?'ring-2 ring-inset ring-[#c18a3b]':''} ${letter?'':'text-transparent'}`} aria-label={`خلية الصف ${row+1} العمود ${col+1}${cell.isKeyCell?'، من حروف كلمة السر':''}`} data-testid={`cell-${row}-${col}`}>
+                return <button key={index} type="button" onClick={() => cell.questionIds[0] && setSelectedId(cell.questionIds[0])} className={`relative aspect-square w-[min(8.6vw,43px)] min-w-[26px] rounded-[5px] border text-base font-bold transition sm:rounded-lg sm:text-lg ${selected?'border-[#f2c989] bg-[#fae7c4] text-primary':'border-[#e9dfc9] bg-[#f7f0df] text-foreground'} ${letter?'':'text-transparent'}`} aria-label={`خلية الصف ${row+1} العمود ${col+1}`} data-testid={`cell-${row}-${col}`}>
                   {cell.number!==undefined&&<span className="absolute right-0.5 top-0 text-[8px] leading-none text-[#67827c] sm:right-1 sm:top-0.5 sm:text-[9px]">{cell.number.toLocaleString('ar-EG')}</span>}
                   <span>{letter}</span>
                 </button>;
@@ -143,17 +134,11 @@ function PlayGame() {
               </article>;
             })}
           </div>
-          <div className="mt-4 rounded-2xl border border-accent/25 bg-[hsl(var(--accent)/.07)] p-4">
-            <label htmlFor="secretWord" className="flex items-center gap-2 text-sm font-bold"><KeyRound size={17} className="text-accent"/> كلمة السر</label>
-             <p className="mt-1 text-xs leading-5 text-muted-foreground">{puzzle?.stageId === 10 ? 'أدخل كلمة السر الختامية لإتمام الرحلة.' : 'اجمع الحروف داخل الخانات ذات الإطار الذهبي بالترتيب.'}</p>
-             {puzzle?.stageId !== 10&&<div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground"><span>الحروف الظاهرة</span><div className="flex gap-1.5" dir="rtl">{secretLetters.map((letter, index) => <span key={index} className="grid size-7 place-items-center rounded-lg border border-accent/30 bg-card font-bold text-primary" data-testid={`secret-fragment-${index}`}>{letter || '·'}</span>)}</div></div>}
-             <input id="secretWord" value={password} onChange={event=>{setPassword(event.target.value);setResult(null);}} className="mt-3 h-11 w-full rounded-xl border border-input bg-card px-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/15" placeholder={puzzle?.stageId === 10 ? 'اكتب كلمة السر الختامية' : 'الكلمة التي تجمع الحروف'} data-testid="input-secret-password"/>
-          </div>
           {result&&<div role="status" className={`mt-4 rounded-2xl border p-4 ${result.stageComplete?'border-primary/25 bg-primary/5':'border-accent/30 bg-accent/5'}`} data-testid="status-attempt-result">
             {result.stageComplete&&!result.nextStageId
-              ? <div className="rounded-xl border border-accent/25 bg-card px-4 py-4 text-center"><Sparkles className="mx-auto text-accent" size={22}/><p className="mt-2 font-bold text-primary">{result.message}</p><p className="mt-2 text-sm text-muted-foreground">كلمة السر الختامية</p><p className="mt-1 font-serif text-2xl font-bold text-foreground" dir="rtl">لا تشاكلو</p></div>
+               ? <div className="rounded-xl border border-accent/25 bg-card px-4 py-4 text-center"><Sparkles className="mx-auto text-accent" size={22}/><p className="mt-2 font-bold text-primary">تهانينا! أتممت جميع الأسئلة.</p><p className="mt-2 font-serif text-2xl font-bold text-foreground" dir="rtl">لا تشاكلو</p></div>
               : <p className="font-bold">{result.message}</p>}
-            <p className="mt-2 text-sm text-muted-foreground">{result.passwordCorrect?'كلمة السر صحيحة':'تحقق من كلمة السر'} · {result.scoreEarned>0?`أضفت ${result.scoreEarned.toLocaleString('ar-EG')} نقطة`:'حاول مرة أخرى'}</p>
+             <p className="mt-2 text-sm text-muted-foreground">{result.scoreEarned>0?`أضفت ${result.scoreEarned.toLocaleString('ar-EG')} نقطة`:'أكمل الإجابات غير الصحيحة وحاول مرة أخرى'}</p>
             {result.stageComplete&&result.nextStageId&&<Link href={`/play/${result.nextStageId}`} className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-primary" data-testid="link-next-stage">إلى المحطة التالية <ArrowRight size={16}/></Link>}
             {result.stageComplete&&!result.nextStageId&&<Link href="/" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-primary">العودة إلى الرحلة <ArrowRight size={16}/></Link>}
           </div>}
