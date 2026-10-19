@@ -289,6 +289,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/StageAnswer"
+        completionPhrase:
+          type: string
+          maxLength: 80
       required: [answers]
     AnswerResult:
       type: object

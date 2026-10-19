@@ -336,7 +336,14 @@ router.post("/stages/:stageId/attempt", async (req, res): Promise<void> => {
       solvedIds.has(entry.questionId),
     );
     const alreadyCompleted = existing?.completed === true && allSolved;
-    const completed = alreadyCompleted || allSolved;
+    const phraseSubmitted = Boolean(body.data.completionPhrase?.trim());
+    const phraseCorrect =
+      normalizeArabicAnswer(body.data.completionPhrase ?? "") ===
+      normalizeArabicAnswer("لا تشاكلو");
+    const requiresCompletionPhrase = stage.id === gameStages.at(-1)?.id;
+    const completed =
+      alreadyCompleted ||
+      (allSolved && (!requiresCompletionPhrase || phraseCorrect));
     const completedNow = completed && !alreadyCompleted;
     const scoreEarned =
       newlySolved.length * 10 + (completedNow ? 50 + 20 : 0);
@@ -390,11 +397,15 @@ router.post("/stages/:stageId/attempt", async (req, res): Promise<void> => {
       scoreEarned,
       message: completedNow
         ? stage.id === gameStages.length
-          ? "تهانينا! أتممت جميع الأسئلة. لا تشاكلو"
+          ? "تهانينا! أتممت جميع الأسئلة."
           : "أحسنت! أُكملت المرحلة وفُتحت المرحلة التالية."
         : completed
           ? "هذه المرحلة مكتملة بالفعل."
-          : "تم فحص الإجابات. أكمل الحل وحاول مرة أخرى.",
+          : allSolved && requiresCompletionPhrase
+            ? phraseSubmitted
+              ? "الإجابات صحيحة، لكن العبارة غير مطابقة. راجع الحروف الذهبية وحاول مرة أخرى."
+              : "أحسنت! اكتملت الأسئلة. اكتب العبارة التي كوّنتها الحروف الذهبية لإتمام الرحلة."
+            : "تم فحص الإجابات. أكمل الحل وحاول مرة أخرى.",
     };
   });
 

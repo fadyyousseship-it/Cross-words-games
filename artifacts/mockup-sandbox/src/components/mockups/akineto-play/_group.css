@@ -1,0 +1,20 @@
+@import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap");
+
+:root {
+  --background: 42 48% 95%;
+  --foreground: 195 31% 18%;
+  --border: 39 26% 85%;
+  --input: 39 26% 85%;
+  --ring: 167 33% 34%;
+  --card: 42 50% 98%;
+  --primary: 167 33% 30%;
+  --primary-foreground: 42 50% 98%;
+  --secondary: 36 47% 88%;
+  --secondary-foreground: 195 31% 22%;
+  --muted: 40 28% 90%;
+  --muted-foreground: 194 14% 43%;
+  --accent: 13 65% 59%;
+  --accent-foreground: 42 50% 98%;
+  --font-sans: "IBM Plex Sans Arabic", sans-serif;
+  --font-serif: "Amiri", serif;
+}

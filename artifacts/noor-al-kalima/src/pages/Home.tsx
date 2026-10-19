@@ -11,7 +11,7 @@ function PublicLanding() {
   const { openSignIn, openSignUp } = useClerk();
   return <div className="grain min-h-[100dvh] overflow-hidden">
     <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
-      <div className="flex items-center gap-3"><span className="grid size-11 place-items-center rounded-2xl bg-primary text-primary-foreground"><BookOpen size={20}/></span><span><b className="block font-serif text-2xl">Akinetos</b><small className="block text-[10px] tracking-wide text-muted-foreground">our path -choose what lasts</small></span></div>
+      <div className="flex items-center gap-3"><span className="grid size-11 place-items-center rounded-2xl border border-primary/35 bg-primary/[.09] text-primary"><BookOpen size={20}/></span><span><b className="block font-serif text-2xl">Akinetos</b><small className="block text-[10px] tracking-wide text-muted-foreground">our path -choose what lasts</small></span></div>
       <div className="flex items-center gap-2"><button onClick={() => openSignIn()} className="rounded-full px-4 py-2.5 text-sm font-semibold hover:bg-secondary" data-testid="button-open-sign-in">دخول</button><button onClick={() => openSignUp()} className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:-translate-y-0.5" data-testid="button-open-sign-up">ابدأ اللعب</button></div>
     </header>
     <main>
@@ -25,10 +25,10 @@ function PublicLanding() {
         </div>
         <div className="relative mx-auto w-full max-w-[480px] page-enter">
           <div className="absolute -left-3 top-8 size-24 rounded-full border border-accent/30 sm:-left-8 sm:size-32"/>
-          <div className="relative rounded-[2.6rem] border border-white/70 bg-card p-5 shadow-xl sm:p-7">
+          <div className="panel-inset relative rounded-[2.2rem] border border-border bg-card p-5 sm:p-7">
             <div className="flex items-center justify-between"><div><span className="text-xs font-semibold text-accent">مرحلة واحدة · ١٦ سؤالاً</span><h2 className="mt-1 font-serif text-2xl">رحلة الكلمة</h2></div><span className="grid size-12 place-items-center rounded-2xl bg-secondary text-primary"><Compass size={23}/></span></div>
-            <div className="mt-6 grid aspect-square grid-cols-6 grid-rows-6 gap-1.5 rounded-2xl bg-[hsl(195_31%_18%)] p-3 sm:gap-2 sm:p-4" dir="ltr" aria-label="نموذج كلمات متقاطعة">
-              {Array.from({length:36},(_,i)=>{const active=[2,3,4,8,10,14,15,16,20,22,26,27,28,32,33].includes(i);return <div key={i} className={`relative grid place-items-center rounded-md ${active?'bg-[#f7f0df]':'bg-transparent'}`}>{active&&[2,3,4,10,16,22,28,33].includes(i)&&<span className="text-[11px] font-bold text-primary">{['ن','و','ر','ك','ل','م','ة',''][[2,3,4,10,16,22,28,33].indexOf(i)]}</span>}</div>})}
+            <div className="mt-6 grid aspect-square grid-cols-6 grid-rows-6 gap-1.5 rounded-2xl border border-border bg-[#0d1420] p-3 sm:gap-2 sm:p-4" dir="ltr" aria-label="نموذج كلمات متقاطعة">
+              {Array.from({length:36},(_,i)=>{const active=[2,3,4,8,10,14,15,16,20,22,26,27,28,32,33].includes(i);const key=[2,3,4,10,16,22,28,33].includes(i);return <div key={i} className={`relative grid place-items-center rounded-md ${key?'border border-[#bd9250] bg-[#c49a58] text-[#29231a]':active?'border border-[#3a4552] bg-[#222c38]':'bg-transparent'}`}>{key&&<span className="text-[11px] font-bold">{['١','٢','٣','٤','٥','٦','٧',''][[2,3,4,10,16,22,28,33].indexOf(i)]}</span>}</div>})}
             </div>
             <div className="mt-5 flex items-center justify-between rounded-2xl bg-secondary/70 px-4 py-3"><span className="text-sm text-muted-foreground">أكمل الأسئلة الـ١٦</span><span className="font-bold text-primary">ثم احتفل بإنجازك</span></div>
           </div>
@@ -75,13 +75,13 @@ function Dashboard() {
   if (!dashboard.profile) return <GameShell><ProfileSetup onSaved={() => void refetch()}/></GameShell>;
   const active = dashboard.stages.find(stage => stage.id === dashboard.activeStageId) || dashboard.stages.find(stage => stage.state === 'available');
   return <GameShell><div className="page-enter">
-    <section className="relative overflow-hidden rounded-[2rem] bg-primary px-6 py-8 text-primary-foreground shadow-md sm:px-10 sm:py-10">
-      <div className="absolute -left-8 -top-16 size-56 rounded-full border border-white/10"/><div className="absolute -left-1 top-2 size-32 rounded-full border border-white/10"/>
+    <section className="panel-inset relative overflow-hidden rounded-[2rem] border border-border bg-[linear-gradient(120deg,hsl(220_29%_16%),hsl(222_31%_11%))] px-6 py-8 text-foreground shadow-md sm:px-10 sm:py-10">
+      <div className="absolute -left-8 -top-16 size-56 rounded-full border border-primary/15"/><div className="absolute -left-1 top-2 size-32 rounded-full border border-primary/15"/>
       <div className="relative flex flex-col justify-between gap-7 sm:flex-row sm:items-end">
-        <div><p className="text-sm text-white/70">أهلاً بعودتك</p><h1 className="mt-2 font-serif text-4xl sm:text-5xl">{dashboard.profile.displayName}</h1><p className="mt-3 max-w-lg text-sm leading-6 text-white/75">{active?`رحلتك تنتظر عند «${active.title}». هل نكمل معاً؟`:'أحسنت، أتممت كل محطات هذه الرحلة.'}</p></div>
-        <div className="flex gap-3"><div className="min-w-28 rounded-2xl border border-white/15 bg-white/10 px-4 py-3"><small className="text-white/70">رصيدك</small><b className="mt-1 block text-2xl">{dashboard.score.toLocaleString('ar-EG')} <span className="text-sm font-medium">نقطة</span></b></div><div className="min-w-28 rounded-2xl border border-white/15 bg-white/10 px-4 py-3"><small className="text-white/70">المرحلة</small><b className="mt-1 block text-2xl">{dashboard.completedStages.toLocaleString('ar-EG')}<span className="text-sm font-medium"> / ١</span></b></div></div>
+        <div><p className="text-sm text-muted-foreground">أهلاً بعودتك</p><h1 className="mt-2 font-serif text-4xl sm:text-5xl">{dashboard.profile.displayName}</h1><p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground">{active?`رحلتك تنتظر عند «${active.title}». هل نكمل معاً؟`:'أحسنت، أتممت كل محطات هذه الرحلة.'}</p></div>
+        <div className="flex gap-3"><div className="min-w-28 rounded-2xl border border-border bg-background/55 px-4 py-3"><small className="text-muted-foreground">رصيدك</small><b className="mt-1 block text-2xl text-primary">{dashboard.score.toLocaleString('ar-EG')} <span className="text-sm font-medium">نقطة</span></b></div><div className="min-w-28 rounded-2xl border border-border bg-background/55 px-4 py-3"><small className="text-muted-foreground">المرحلة</small><b className="mt-1 block text-2xl text-primary">{dashboard.completedStages.toLocaleString('ar-EG')}<span className="text-sm font-medium"> / ١</span></b></div></div>
       </div>
-      {active&&<Link href={`/play/${active.id}`} className="relative mt-7 inline-flex items-center gap-3 rounded-full bg-[#f3d39d] px-6 py-3.5 font-bold text-foreground transition hover:-translate-y-0.5" data-testid="link-resume-stage">تابع المرحلة {active.id.toLocaleString('ar-EG')} <ArrowLeft size={18}/></Link>}
+      {active&&<Link href={`/play/${active.id}`} className="relative mt-7 inline-flex items-center gap-3 rounded-xl bg-primary px-6 py-3.5 font-bold text-primary-foreground transition hover:-translate-y-0.5" data-testid="link-resume-stage">تابع المرحلة {active.id.toLocaleString('ar-EG')} <ArrowLeft size={18}/></Link>}
     </section>
      <section className="mt-10"><div className="mb-5 flex items-end justify-between"><div><p className="text-sm font-bold text-accent">خارطة الرحلة</p><h2 className="mt-1 font-serif text-3xl">مرحلة الكلمة</h2></div><span className="text-sm text-muted-foreground">{dashboard.completedStages.toLocaleString('ar-EG')} من ١ مكتملة</span></div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">{dashboard.stages.map((stage,index)=><article key={stage.id} className={`relative min-h-[160px] rounded-[1.4rem] border p-4 transition ${stage.state==='available'?'border-primary/35 bg-card shadow-md ring-1 ring-primary/10':'border-border bg-card/70'} ${stage.state==='locked'?'opacity-65':''}`} data-testid={`card-stage-${stage.id}`}>

@@ -107,11 +107,16 @@ export const SubmitStageAttemptParams = zod.object({
   "stageId": zod.coerce.number().int().min(1)
 })
 
+export const submitStageAttemptBodyCompletionPhraseMax = 80;
+
+
+
 export const SubmitStageAttemptBody = zod.object({
   "answers": zod.array(zod.object({
   "questionId": zod.number().int(),
   "answer": zod.string()
-}))
+})),
+  "completionPhrase": zod.string().max(submitStageAttemptBodyCompletionPhraseMax).optional()
 })
 
 export const SubmitStageAttemptResponse = zod.object({

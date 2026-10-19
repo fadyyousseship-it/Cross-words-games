@@ -98,6 +98,8 @@ export interface StagePuzzle {
 
 export interface StageAttemptInput {
   answers: StageAnswer[];
+  /** @maxLength 80 */
+  completionPhrase?: string;
 }
 
 export interface AnswerResult {

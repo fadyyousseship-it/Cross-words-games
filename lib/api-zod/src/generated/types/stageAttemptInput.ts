@@ -9,4 +9,6 @@ import type { StageAnswer } from './stageAnswer';
 
 export interface StageAttemptInput {
   answers: StageAnswer[];
+  /** @maxLength 80 */
+  completionPhrase?: string;
 }
