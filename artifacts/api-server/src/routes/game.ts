@@ -19,7 +19,13 @@ import {
   gameProfilesTable,
   stageProgressTable,
 } from "@workspace/db";
-import { gameStages, getStage, normalizeArabicAnswer } from "../lib/game-content";
+import {
+  STAGE_CONGRATS,
+  STAGE_PASSWORD,
+  gameStages,
+  getStage,
+  normalizeArabicAnswer,
+} from "../lib/game-content";
 
 const router: IRouter = Router();
 
@@ -339,7 +345,7 @@ router.post("/stages/:stageId/attempt", async (req, res): Promise<void> => {
     const phraseSubmitted = Boolean(body.data.completionPhrase?.trim());
     const phraseCorrect =
       normalizeArabicAnswer(body.data.completionPhrase ?? "") ===
-      normalizeArabicAnswer("لا تشاكلو");
+      normalizeArabicAnswer(STAGE_PASSWORD);
     const requiresCompletionPhrase = stage.id === gameStages.at(-1)?.id;
     const completed =
       alreadyCompleted ||
@@ -403,9 +409,10 @@ router.post("/stages/:stageId/attempt", async (req, res): Promise<void> => {
           ? "هذه المرحلة مكتملة بالفعل."
           : allSolved && requiresCompletionPhrase
             ? phraseSubmitted
-              ? "الإجابات صحيحة، لكن العبارة غير مطابقة. راجع الحروف الذهبية وحاول مرة أخرى."
-              : "أحسنت! اكتملت الأسئلة. اكتب العبارة التي كوّنتها الحروف الذهبية لإتمام الرحلة."
+              ? "كلمة السر غير صحيحة، راجع الخانات الذهبية وحاول مرة أخرى."
+              : "أحسنت! اكتملت الأسئلة. اكتب كلمة السر لإتمام الرحلة."
             : "تم فحص الإجابات. أكمل الحل وحاول مرة أخرى.",
+      ...(completed ? { congratsMessage: STAGE_CONGRATS } : {}),
     };
   });
 

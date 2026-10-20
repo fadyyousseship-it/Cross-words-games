@@ -128,7 +128,8 @@ export const SubmitStageAttemptResponse = zod.object({
   "nextStageId": zod.number().int().nullable(),
   "scoreEarned": zod.number().int(),
   "totalScore": zod.number().int(),
-  "message": zod.string()
+  "message": zod.string(),
+  "congratsMessage": zod.string().nullish()
 })
 
 

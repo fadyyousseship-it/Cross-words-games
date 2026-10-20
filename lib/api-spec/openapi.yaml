@@ -318,6 +318,8 @@ components:
           type: integer
         message:
           type: string
+        congratsMessage:
+          type: ["string", "null"]
       required: [results, stageComplete, nextStageId, scoreEarned, totalScore, message]
     AdminAccess:
       type: object

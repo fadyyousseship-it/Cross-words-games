@@ -115,6 +115,8 @@ export interface StageAttemptResult {
   scoreEarned: number;
   totalScore: number;
   message: string;
+  /** @nullable */
+  congratsMessage?: string | null;
 }
 
 export interface AdminAccess {

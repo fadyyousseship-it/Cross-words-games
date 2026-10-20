@@ -130,9 +130,8 @@ function PlayGame() {
                 const selected = activeEntry && cell.questionIds.includes(activeEntry.questionId);
                 const letter = cell.letters[0] || '';
                 const isKeyCell = cell.secretOrder !== undefined;
-                return <button key={index} type="button" onClick={() => cell.questionIds[0] && setSelectedId(cell.questionIds[0])} className={`relative aspect-square w-[min(8.6vw,43px)] min-w-[26px] rounded-[5px] border font-bold transition-colors sm:rounded-lg sm:text-lg ${isKeyCell ? (selected ? 'border-[#f4d18d] bg-[#d9ad63] text-[#25201a]' : 'border-[#bd9250] bg-[#c49a58] text-[#29231a]') : selected ? 'border-primary/80 bg-[#e2c88f] text-[#28251f]' : 'border-[#3a4552] bg-[#222c38] text-foreground'} ${letter ? '' : 'text-transparent'}`} aria-label={isKeyCell ? `خلية الرسالة رقم ${cell.secretOrder?.toLocaleString('ar-EG')}` : `خلية الصف ${row + 1} العمود ${col + 1}`} data-testid={`cell-${row}-${col}`}>
+                return <button key={index} type="button" onClick={() => cell.questionIds[0] && setSelectedId(cell.questionIds[0])} className={`relative aspect-square w-[min(8.6vw,43px)] min-w-[26px] rounded-[5px] border font-bold transition-colors sm:rounded-lg sm:text-lg ${isKeyCell ? (selected ? 'border-[#f4d18d] bg-[#d9ad63] text-[#25201a]' : 'border-[#bd9250] bg-[#c49a58] text-[#29231a]') : selected ? 'border-primary/80 bg-[#e2c88f] text-[#28251f]' : 'border-[#3a4552] bg-[#222c38] text-foreground'} ${letter ? '' : 'text-transparent'}`} aria-label={isKeyCell ? 'خلية الرسالة' : `خلية الصف ${row + 1} العمود ${col + 1}`} data-testid={`cell-${row}-${col}`}>
                   {cell.number!==undefined&&<span className={`absolute right-0.5 top-0 text-[8px] leading-none sm:right-1 sm:top-0.5 sm:text-[9px] ${isKeyCell?'text-[#4a3922]':'text-[#98a3ae]'}`}>{cell.number.toLocaleString('ar-EG')}</span>}
-                  {isKeyCell&&<span className="absolute left-0.5 top-0 text-[8px] font-extrabold leading-none sm:left-1 sm:top-0.5 sm:text-[9px]">{cell.secretOrder?.toLocaleString('ar-EG')}</span>}
                   <span>{letter}</span>
                 </button>;
               })}
@@ -157,20 +156,20 @@ function PlayGame() {
             })}
           </div>
           {allAnswersCorrect&&!result?.stageComplete&&<div className="mt-4 rounded-2xl border border-primary/35 bg-primary/[.06] p-4" data-testid="completion-phrase-panel">
-            <label htmlFor="completion-phrase" className="block text-sm font-bold text-primary">اجمع الحروف الذهبية واكتب العبارة</label>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">بعد مراجعة الإجابات، أدخل العبارة التي تكوّنت من خانات الشبكة.</p>
-            <input id="completion-phrase" value={completionPhrase} onChange={event=>setCompletionPhrase(event.target.value)} dir="rtl" maxLength={80} placeholder="اكتب العبارة هنا" className="mt-3 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10" data-testid="input-completion-phrase"/>
+            <label htmlFor="completion-phrase" className="block text-sm font-bold text-primary">كلمة السر</label>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">الخانات الذهبية، من الأعلى إلى الأسفل، تكوّن كلمة السر. اكتبها لإتمام الرحلة.</p>
+            <input id="completion-phrase" value={completionPhrase} onChange={event=>setCompletionPhrase(event.target.value)} dir="rtl" maxLength={80} placeholder="اكتب كلمة السر" className="mt-3 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10" data-testid="input-completion-phrase"/>
           </div>}
           {result&&<div role="status" className={`mt-4 rounded-2xl border p-4 ${result.stageComplete?'border-primary/35 bg-primary/[.07]':'border-border bg-secondary/40'}`} data-testid="status-attempt-result">
             {result.stageComplete
-              ? <div className="rounded-xl border border-primary/25 bg-background/55 px-4 py-5 text-center"><Sparkles className="mx-auto text-primary" size={23}/><p className="mt-2 font-bold text-primary">تهانينا، أتممت هذه المرحلة.</p><p className="mt-3 font-serif text-lg leading-9 text-foreground sm:text-xl" dir="rtl">وَلَا تُشَاكِلُوا هَذَا الدَّهْرَ، بَلْ تَغَيَّرُوا عَنْ شَكْلِكُمْ بِتَجْدِيدِ أَذْهَانِكُمْ، لِتَخْتَبِرُوا مَا هِيَ إِرَادَةُ اللهِ: الصَّالِحَةُ الْمَرْضِيَّةُ الْكَامِلَةُ.</p></div>
+              ? <div className="rounded-xl border border-primary/25 bg-background/55 px-4 py-5 text-center"><Sparkles className="mx-auto text-primary" size={23}/><p className="mt-2 font-bold text-primary">تهانينا، أتممت هذه المرحلة.</p><p className="mt-3 font-serif text-lg leading-9 text-foreground sm:text-xl" dir="rtl">{result.congratsMessage ?? ''}</p></div>
               : <p className="font-semibold leading-6">{result.message}</p>}
             <p className="mt-3 text-sm text-muted-foreground">{result.scoreEarned>0?`أضفت ${result.scoreEarned.toLocaleString('ar-EG')} نقطة`:'راجع الإجابات ثم حاول مرة أخرى'}</p>
             {result.stageComplete&&result.nextStageId&&<Link href={`/play/${result.nextStageId}`} className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-primary" data-testid="link-next-stage">إلى المحطة التالية <ArrowRight size={16}/></Link>}
             {result.stageComplete&&!result.nextStageId&&<Link href="/" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-primary" data-testid="link-finish-journey">العودة إلى الرحلة <ArrowRight size={16}/></Link>}
           </div>}
           {attempt.isError&&<p role="alert" className="mt-3 rounded-xl border border-destructive/25 bg-destructive/10 p-3 text-sm text-destructive">تعذّر إرسال الإجابات. تحقق من اتصالك ثم أعد المحاولة.</p>}
-          <button type="submit" disabled={attempt.isPending||(allAnswersCorrect&&!completionPhrase.trim())||result?.stageComplete===true} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 font-bold text-primary-foreground shadow-sm transition hover:-translate-y-0.5 hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-45" data-testid="button-submit-attempt">{attempt.isPending?<><LoaderCircle size={17} className="animate-spin"/> جارٍ التحقق...</>:<><Send size={16}/> {allAnswersCorrect?'تحقق من العبارة':'تحقق من الإجابات'}</>}</button>
+          <button type="submit" disabled={attempt.isPending||result?.stageComplete===true||(allAnswersCorrect&&!completionPhrase.trim())} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 font-bold text-primary-foreground shadow-sm transition hover:-translate-y-0.5 hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-45" data-testid="button-submit-attempt">{attempt.isPending?<><LoaderCircle size={17} className="animate-spin"/> جارٍ التحقق...</>:<><Send size={16}/> {allAnswersCorrect?'تحقق من كلمة السر':'تحقق من الإجابات'}</>}</button>
           <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground"><Sparkles size={14} className="text-primary"/> يمكنك العودة إلى الأسئلة ومراجعتها في أي وقت.</div>
         </div>
       </form>
